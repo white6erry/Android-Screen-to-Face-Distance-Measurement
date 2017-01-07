@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.tec.fontsize.messages.MeasurementStepMessage;
 import com.tec.fontsize.messages.MessageHUB;
@@ -24,64 +25,48 @@ public class MainActivity extends Activity implements MessageListener {
 	public static final String CAM_SIZE_HEIGHT = "intent_cam_size_height";
 	public static final String AVG_NUM = "intent_avg_num";
 	public static final String PROBANT_NAME = "intent_probant_name";
-
 	private CameraSurfaceView _mySurfaceView;
 	Camera _cam;
-
-	private final static DecimalFormat _decimalFormater = new DecimalFormat(
-			"0.0");
-
-	private float _currentDevicePosition;
-
+	private final static DecimalFormat _decimalFormater = new DecimalFormat("0.0");
 	private int _cameraHeight;
 	private int _cameraWidth;
-	private int _avgNum;
-
-	TextView _currentDistanceView;
-	Button _calibrateButton;
-
-	/**
-	 * Abusing the media controls to create a remote control
-	 */
-	// ComponentName _headSetButtonReceiver;
-	// AudioManager _audioManager;
-
+	TextView _currentDistanceView;		//거리를 텍스트로 보여주기
+	Button _calibrateButton;			//측정시작 버튼
+	private float safeDistance = 20.0f;
+	
 	@Override
-	public void onCreate(final Bundle savedInstanceState) {
+	public void onCreate(final Bundle savedInstanceState) {		//프로그램이 처음 실행 될 경우 실행
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.measurement_activity);
 
-		_mySurfaceView = (CameraSurfaceView) findViewById(R.id.surface_camera);
+		_mySurfaceView = (CameraSurfaceView) findViewById(R.id.surface_camera);	
 
-		RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(
-				(int) (0.95 * this.getResources().getDisplayMetrics().widthPixels),
-				(int) (0.6 * this.getResources().getDisplayMetrics().heightPixels));
+		RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(		//위젯을 상대적인 위치에 배열하는 레이아웃
+				(int) (0.95 * this.getResources().getDisplayMetrics().widthPixels),	//가로
+				(int) (0.6 * this.getResources().getDisplayMetrics().heightPixels));//세로
 
-		layout.setMargins(0, (int) (0.05 * this.getResources()
-				.getDisplayMetrics().heightPixels), 0, 0);
+		layout.setMargins(0, (int) (0.05 * this.getResources().getDisplayMetrics().heightPixels), 0, 0);
 
 		_mySurfaceView.setLayoutParams(layout);
-		_currentDistanceView = (TextView) findViewById(R.id.currentDistance);
-		_calibrateButton = (Button) findViewById(R.id.calibrateButton);
-
-		// _audioManager = (AudioManager) this
-		// .getSystemService(Context.AUDIO_SERVICE);
+		_currentDistanceView = (TextView) findViewById(R.id.currentDistance);	//현재의 거리 출력 창
+		_calibrateButton = (Button) findViewById(R.id.calibrateButton);			//calibrate 버튼 
+		_calibrateButton.setBackgroundResource(R.drawable.yellow_button);
+		
 	}
 
 	@Override
-	protected void onResume() {
+	protected void onResume() {		//focus를 다시 얻었을 때 실행
 		super.onResume();
 
 		MessageHUB.get().registerListener(this);
-		// _audioManager.registerMediaButtonEventReceiver(_headSetButtonReceiver);
 
 		// 1 for front cam. No front cam ? Not my fault!
 		_cam = Camera.open(1);
 		Camera.Parameters param = _cam.getParameters();
 
-		// Find the best suitable camera picture size for your device. Competent
-		// research has shown that a smaller size gets better results up to a
-		// certain point.
+		/*Find the best suitable camera picture size for your device. Competent
+		  research has shown that a smaller size gets better results up to a
+		  certain point.*/
 		// http://ieeexplore.ieee.org/xpl/login.jsp?tp=&arnumber=6825217&url=http%3A%2F%2Fieeexplore.ieee.org%2Fiel7%2F6816619%2F6825201%2F06825217.pdf%3Farnumber%3D6825217
 		List<Size> pSize = param.getSupportedPictureSizes();
 		double deviceRatio = (double) this.getResources().getDisplayMetrics().widthPixels
@@ -113,12 +98,7 @@ public class MainActivity extends Activity implements MessageListener {
 	@Override
 	protected void onPause() {
 		super.onPause();
-
 		MessageHUB.get().unregisterListener(this);
-
-		// _audioManager
-		// .unregisterMediaButtonEventReceiver(_headSetButtonReceiver);
-
 		resetCam();
 	}
 
@@ -128,18 +108,14 @@ public class MainActivity extends Activity implements MessageListener {
 	 * @param v
 	 */
 	public void pressedCalibrate(final View v) {
-
 		if (!_mySurfaceView.isCalibrated()) {
-
 			_calibrateButton.setBackgroundResource(R.drawable.yellow_button);
 			_mySurfaceView.calibrate();
 		}
 	}
 
 	public void pressedReset(final View v) {
-
 		if (_mySurfaceView.isCalibrated()) {
-
 			_calibrateButton.setBackgroundResource(R.drawable.red_button);
 			_mySurfaceView.reset();
 		}
@@ -165,18 +141,19 @@ public class MainActivity extends Activity implements MessageListener {
 	 */
 	public void updateUI(final MeasurementStepMessage message) {
 
-		_currentDistanceView.setText(_decimalFormater.format(message
-				.getDistToFace()) + " cm");
+		_currentDistanceView.setText(_decimalFormater.format(message.getDistToFace()) + " cm");
 
-		float fontRatio = message.getDistToFace() / 29.7f;
-
-		_currentDistanceView.setTextSize(fontRatio * 20);
-
+		float fontRatio = message.getDistToFace() / 29.7f;		//기기와 거리
+	
+		_currentDistanceView.setTextSize(fontRatio * 20);		//폰트 사이즈 세팅
+		
+		if(message.getDistToFace() <= safeDistance && message.getDistToFace() > 0){
+			Toast.makeText(this, "경고", Toast.LENGTH_LONG).show();
+		}
 	}
 
 	private void resetCam() {
 		_mySurfaceView.reset();
-
 		_cam.stopPreview();
 		_cam.setPreviewCallback(null);
 		_cam.release();
@@ -194,7 +171,7 @@ public class MainActivity extends Activity implements MessageListener {
 		case MessageHUB.DONE_CALIBRATION:
 
 			_calibrateButton.setBackgroundResource(R.drawable.green_button);
-
+			
 			break;
 		default:
 			break;

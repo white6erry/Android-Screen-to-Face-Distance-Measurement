@@ -26,55 +26,40 @@ import com.tec.fontsize.messages.MeasurementStepMessage;
 import com.tec.fontsize.messages.MessageHUB;
 import com.tec.fontsize.utils.Util;
 
-public class CameraSurfaceView extends SurfaceView implements Callback,
-		Camera.PreviewCallback {
+public class CameraSurfaceView extends SurfaceView implements Callback, Camera.PreviewCallback {
 
 	/**
 	 * Represents the standard height of a peace of a4 paper e.g. 29.7cm
 	 */
 	public static final int CALIBRATION_DISTANCE_A4_MM = 294;
-
 	public static final int CALIBRATION_MEASUREMENTS = 10;
-
-	public static final int AVERAGE_THREASHHOLD = 5;
+	public static final int AVERAGE_THREASHHOLD = 10;
 
 	/**
 	 * Measured distance at calibration point
 	 */
 	private float _distanceAtCalibrationPoint = -1;
-
 	private float _currentAvgEyeDistance = -1;
-
 	// private int _facesFoundInMeasurement = -1;
 
 	/**
 	 * in cm
 	 */
 	private float _currentDistanceToFace = -1;
-
 	private final SurfaceHolder mHolder;
-
 	private Camera mCamera;
-
 	private Face _foundFace = null;
-
 	private int _threashold = CALIBRATION_MEASUREMENTS;
-
 	private FaceDetectionThread _currentFaceDetectionThread;
-
 	private List<Point> _points;
-
 	protected final Paint _middlePointColor = new Paint();
 	protected final Paint _eyeColor = new Paint();
-
 	private Size _previewSize;
-
-	// private boolean _measurementStartet = false;
 	private boolean _calibrated = false;
 	private boolean _calibrating = false;
 	private int _calibrationsLeft = -1;
 
-	public CameraSurfaceView(final Context context, final AttributeSet attrs) {
+	public CameraSurfaceView(final Context context, final AttributeSet attrs) {		//카메라 세팅	
 		super(context, attrs);
 		_middlePointColor.setARGB(100, 200, 0, 0);
 		_middlePointColor.setStyle(Paint.Style.FILL);
@@ -86,12 +71,11 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 		mHolder.addCallback(this);
 	}
 
-	public void setCamera(final Camera camera) {
+	public void setCamera(final Camera camera) {		//카메라 세팅
 		mCamera = camera;
 
 		if (mCamera != null) {
 			requestLayout();
-
 			Camera.Parameters params = mCamera.getParameters();
 			camera.setDisplayOrientation(90);
 			List<String> focusModes = params.getSupportedFocusModes();
@@ -111,13 +95,13 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 	private final PointF _middlePoint = new PointF();
 	private final Rect _trackingRectangle = new Rect();
 
-	private final static int RECTANGLE_SIZE = 20;
+	private final static int RECTANGLE_SIZE = 10;	//눈의 위치와 눈 중간위치를 추적하는 사각형의 크기
 	private boolean _showEyes = false;
 	private boolean _showTracking = true;
 
 	@SuppressLint("DrawAllocation")
 	@Override
-	protected void onDraw(final Canvas canvas) {
+	protected void onDraw(final Canvas canvas) {	//눈 위치와 눈 중간지점의 사각형 그리기
 		// super.onDraw(canvas);
 
 		if (_foundFace != null) {
@@ -138,7 +122,7 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 			Log.i("Drawcall", "Real :" + realX + " : " + realY);
 			int halfEyeDist = (int) (widthRatio * _foundFace.eyesDistance() / 2);
 
-			if (_showTracking) {
+			if (_showTracking) {		//tracking이 true 일 때
 				// Middle point
 				_trackingRectangle.left = realX - RECTANGLE_SIZE;
 				_trackingRectangle.top = realY - RECTANGLE_SIZE;
@@ -147,7 +131,7 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 				canvas.drawRect(_trackingRectangle, _middlePointColor);
 			}
 
-			if (_showEyes) {
+			if (_showEyes) {			//showEye가 true일 때
 				// Left eye
 				_trackingRectangle.left = realX - halfEyeDist - RECTANGLE_SIZE;
 				_trackingRectangle.top = realY - RECTANGLE_SIZE;
@@ -165,7 +149,7 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 		}
 	}
 
-	public void reset() {
+	public void reset() {		//초기화
 		_distanceAtCalibrationPoint = -1;
 		_currentAvgEyeDistance = -1;
 		_calibrated = false;
@@ -177,7 +161,7 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 	 * Sets this current EYE distance to be the distance of a peace of a4 paper
 	 * e.g. 29,7cm
 	 */
-	public void calibrate() {
+	public void calibrate() {		//보정하기
 		if (!_calibrating || !_calibrated) {
 			_points = new ArrayList<Point>();
 			_calibrating = true;
@@ -186,7 +170,7 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 		}
 	}
 
-	private void doneCalibrating() {
+	private void doneCalibrating() {	//보정완료
 		_calibrated = true;
 		_calibrating = false;
 		_currentFaceDetectionThread = null;
@@ -219,9 +203,7 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 		_foundFace = _currentFaceDetectionThread.getCurrentFace();
 
 		_points.add(new Point(_foundFace.eyesDistance(),
-				CALIBRATION_DISTANCE_A4_MM
-						* (_distanceAtCalibrationPoint / _foundFace
-								.eyesDistance())));
+				CALIBRATION_DISTANCE_A4_MM * (_distanceAtCalibrationPoint / _foundFace.eyesDistance())));//29.4cm * 보정거리 / 눈사이거리
 
 		while (_points.size() > _threashold) {
 			_points.remove(0);
@@ -234,11 +216,10 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 
 		_currentAvgEyeDistance = sum / _points.size();
 
-		_currentDistanceToFace = CALIBRATION_DISTANCE_A4_MM
-				* (_distanceAtCalibrationPoint / _currentAvgEyeDistance);
+		_currentDistanceToFace = CALIBRATION_DISTANCE_A4_MM	* (_distanceAtCalibrationPoint / _currentAvgEyeDistance);
 
 		_currentDistanceToFace = Util.MM_TO_CM(_currentDistanceToFace);
-
+		
 		MeasurementStepMessage message = new MeasurementStepMessage();
 		message.setConfidence(currentFace.confidence());
 		message.setCurrentAvgEyeDistance(_currentAvgEyeDistance);
@@ -246,7 +227,6 @@ public class CameraSurfaceView extends SurfaceView implements Callback,
 		message.setEyesDistance(currentFace.eyesDistance());
 		message.setMeasurementsLeft(_calibrationsLeft);
 		message.setProcessTimeForLastFrame(_processTimeForLastFrame);
-
 		MessageHUB.get().sendMessage(MessageHUB.MEASUREMENT_STEP, message);
 	}
 

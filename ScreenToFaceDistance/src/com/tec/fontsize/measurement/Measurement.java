@@ -4,42 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Measurement {
-
-	/**
-	 * The probants name
-	 */
-	private String _probantName;
-
-	/**
-	 * Which device was used
-	 */
-	private String _deviceName;
-
-	/**
-	 * The used resolution of the front camera during this measurement
-	 */
-	private String _camResolution;
-
-	/**
-	 * The amount of measurements which are combined into one measurement point
-	 */
-	private int _averageNumber;
-
-	/**
-	 * The position of the device in the 'real world' when the calibration is
-	 * done
-	 */
-	private float _calibrationPosition;
-
-	/**
-	 * The used calibration distance, e.g. an A4-paper (29.7 cm)
-	 */
-	private float _calibrationDistance;
-
-	/**
-	 * All measurement points during this measurement
-	 */
-	private final List<MeasurementPoint> _measurementPoints = new ArrayList<MeasurementPoint>();
+	private String _probantName;		//The probants name 이름
+	private String _deviceName;			//기기의 이름
+	private String _camResolution;		//측정할 때 쓰이는 전면부 카메라의 해상도
+	private int _averageNumber;			//Measurement Point의 개수
+	private float _calibrationPosition;	//보정이 되었을 때의 기기의 실제 위치
+	private float _calibrationDistance;	//사용된 보정 거리, e.g. an A4-paper (29.7 cm)
+	private final List<MeasurementPoint> _measurementPoints = new ArrayList<MeasurementPoint>();//Measurement point 배열
 
 	/**
 	 * Returns the measured failure occured while the Head is for example not

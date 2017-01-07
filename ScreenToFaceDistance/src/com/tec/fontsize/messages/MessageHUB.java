@@ -5,13 +5,13 @@ import java.util.List;
 
 public class MessageHUB {
 
-	public static final int MEDIA_BUTTON_CLICKED = 0;
+	public static final int MEDIA_BUTTON_CLICKED = 0;	//
 
-	public static final int MEASUREMENT_STEP = 1;
+	public static final int MEASUREMENT_STEP = 1;		//
 
-	public static final int DONE_CALIBRATION = 2;
+	public static final int DONE_CALIBRATION = 2;		//
 
-	public static final int DONE_MEASUREMENT = 3;
+	public static final int DONE_MEASUREMENT = 3;		//
 
 	private static MessageHUB _instance = new MessageHUB();
 
@@ -25,7 +25,6 @@ public class MessageHUB {
 		if (!_listenerList.contains(listener)) {
 			return _listenerList.add(listener);
 		}
-
 		return false;
 	}
 
@@ -38,5 +37,4 @@ public class MessageHUB {
 			ml.onMessage(messageID, message);
 		}
 	}
-
 }

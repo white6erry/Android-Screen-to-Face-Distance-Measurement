@@ -15,7 +15,7 @@ import android.media.FaceDetector.Face;
 import android.util.Log;
 
 public class FaceDetectionThread extends Thread {
-
+  
 	public static final String FACEDETECTIONTHREAD_TAG = "FaceDetectionThread_Tag";
 
 	private Face _currentFace;
